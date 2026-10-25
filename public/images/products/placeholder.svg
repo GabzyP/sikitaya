@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E7F0EB"/>
+      <stop offset="1" stop-color="#F6EFE1"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <circle cx="400" cy="250" r="100" fill="#0B6B53" opacity=".1"/>
+  <path d="M350 270h100v90a25 25 0 0 1-25 25h-50a25 25 0 0 1-25-25z" fill="none" stroke="#0B6B53" stroke-width="8" opacity=".55"/>
+  <path d="M450 300h25a25 25 0 0 1 0 50h-25" fill="none" stroke="#0B6B53" stroke-width="8" opacity=".55"/>
+  <text x="400" y="480" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#0B6B53" opacity=".7">Sikitaya</text>
+</svg>
