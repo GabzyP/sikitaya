@@ -69,7 +69,9 @@
                             <td class="cell-money">{{ rupiah($order->total) }}</td>
                             <td>
                                 <span class="badge-soft"><i class="bi {{ $order->payment_method->icon() }}"></i> {{ $order->payment_method->shortLabel() }}</span>
-                                @if ($order->status === \App\Enums\OrderStatus::Menunggu && $order->requiresPaymentProof() && ! $order->payment_proof)
+                                @if ($order->paymentTransaction)
+                                    <div class="mt-1"><span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span></div>
+                                @elseif ($order->status === \App\Enums\OrderStatus::Menunggu && $order->requiresPaymentProof() && ! $order->payment_proof)
                                     <div class="cell-sub text-danger">Belum ada bukti</div>
                                 @endif
                             </td>

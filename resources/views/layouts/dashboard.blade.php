@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/hanni.jpg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') · Sikitaya</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +22,7 @@
             <div class="sidebar-inner">
                 <div class="sidebar-head">
                     <a href="{{ route('home') }}" class="brand brand-light text-decoration-none">
-                        <span class="brand-mark">S</span>
+                        @include('partials.brand-logo')
                         <span class="brand-text">
                             <span class="brand-name">Sikitaya</span>
                             <span class="brand-tag">{{ $isSeller ? 'RUANG PENJUAL' : 'PANEL ADMIN' }}</span>
@@ -67,6 +68,7 @@
                     @else
                         <a class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-grid-1x2"></i> Ringkasan</a>
                         <a class="sidebar-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}"><i class="bi bi-receipt"></i> Pesanan</a>
+                        <a class="sidebar-link {{ request()->routeIs('admin.payments.*') || request()->routeIs('admin.store-payments.*') ? 'active' : '' }}" href="{{ route('admin.payments.index') }}"><i class="bi bi-credit-card"></i> Pembayaran</a>
                         <a class="sidebar-link {{ request()->routeIs('admin.stores.*') ? 'active' : '' }}" href="{{ route('admin.stores.index') }}"><i class="bi bi-shop"></i> Toko</a>
                         <a class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people"></i> Pengguna</a>
                         <a class="sidebar-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><i class="bi bi-tags"></i> Kategori</a>

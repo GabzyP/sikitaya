@@ -22,17 +22,26 @@
         </div>
     </div>
     <div class="product-footer">
-        @if ($product->stock > 0)
-            <form action="{{ route('cart.store') }}" method="POST" class="w-100">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <input type="hidden" name="quantity" value="1">
-                <button type="submit" class="btn btn-cart w-100">
-                    <i class="bi bi-bag-plus"></i> Tambah ke keranjang
-                </button>
-            </form>
+        @auth
+            @if ($product->stock > 0)
+                <form action="{{ route('cart.store') }}" method="POST" class="product-actions">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn btn-cart w-100">
+                        <i class="bi bi-bag-plus"></i> Tambah ke keranjang
+                    </button>
+                    <button type="submit" class="btn btn-brand w-100" formaction="{{ route('checkout.direct') }}">
+                        <i class="bi bi-lightning-charge"></i> Checkout langsung
+                    </button>
+                </form>
+            @else
+                <button type="button" class="btn btn-cart w-100" disabled><i class="bi bi-x-circle"></i> Stok habis</button>
+            @endif
         @else
-            <button type="button" class="btn btn-cart w-100" disabled><i class="bi bi-x-circle"></i> Stok habis</button>
-        @endif
+            <a href="{{ route('login') }}" class="btn btn-cart w-100">
+                <i class="bi bi-box-arrow-in-right"></i> Masuk untuk membeli
+            </a>
+        @endauth
     </div>
 </article>

@@ -83,6 +83,9 @@
                             <td class="text-center">{{ $order->items->sum('quantity') }}</td>
                             <td>
                                 <span class="badge-soft"><i class="bi {{ $order->payment_method->icon() }}"></i> {{ $order->payment_method->shortLabel() }}</span>
+                                @if ($order->paymentTransaction)
+                                    <div class="mt-1"><span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span></div>
+                                @endif
                             </td>
                             <td class="text-end cell-money">{{ rupiah($order->total) }}</td>
                             <td><span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span></td>

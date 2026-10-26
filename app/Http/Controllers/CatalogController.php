@@ -45,7 +45,7 @@ class CatalogController extends Controller
             default => $query->latest(),
         };
 
-        $products = $query->paginate(12)->withQueryString();
+        $products = $query->paginate($request->user() ? 12 : 8)->withQueryString();
         $categories = Category::withCount(['products' => fn ($builder) => $builder->active()])->orderBy('name')->get();
         $activeCategory = filled($filters['category'] ?? null) ? $categories->firstWhere('slug', $filters['category']) : null;
         $activeStore = filled($filters['store'] ?? null) ? Store::active()->where('slug', $filters['store'])->first() : null;

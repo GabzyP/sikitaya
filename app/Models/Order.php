@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -33,6 +34,7 @@ class Order extends Model
         'subtotal',
         'total',
         'payment_method',
+        'payment_transaction_id',
         'status',
         'payment_proof',
         'payment_proof_uploaded_at',
@@ -76,6 +78,37 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function paymentTransaction(): BelongsTo
+    {
+        return $this->belongsTo(PaymentTransaction::class);
+    }
+
+    public function paymentAllocation(): HasOne
+    {
+        return $this->hasOne(PaymentAllocation::class);
+    }
+
+    public function isMidtransPayment(): bool
+    {
+        return $this->payment_method === PaymentMethod::Midtrans;
+    }
+
+    public function hasPendingOnlinePayment(): bool
+    {
+        return $this->isMidtransPayment()
+            && $this->status === OrderStatus::Menunggu
+            && $this->paymentTransaction?->isPending();
+    }
+
+    public function paymentStatusLabel(): string
+    {
+        if (! $this->isMidtransPayment()) {
+            return $this->status->label();
+        }
+
+        return $this->paymentTransaction?->status->label() ?? 'Menunggu pembayaran';
     }
 
     public function scopeForBuyer(Builder $query, int $userId): Builder

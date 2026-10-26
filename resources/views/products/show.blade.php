@@ -57,22 +57,35 @@
                                 <span class="text-muted">{{ berat($product->weight) }} / item</span>
                             </div>
 
-                            <form action="{{ route('cart.store') }}" method="POST" class="d-flex flex-wrap align-items-center gap-2">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <div class="qty-control">
-                                    <button type="button" data-qty-minus aria-label="Kurangi jumlah"><i class="bi bi-dash"></i></button>
-                                    <input type="number" name="quantity" value="{{ max(1, (int) old('quantity', 1)) }}" min="1" max="{{ $product->stock }}" aria-label="Jumlah produk">
-                                    <button type="button" data-qty-plus aria-label="Tambah jumlah"><i class="bi bi-plus"></i></button>
+                            @auth
+                                <form action="{{ route('cart.store') }}" method="POST" class="d-flex flex-wrap align-items-center gap-2">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    <div class="qty-control">
+                                        <button type="button" data-qty-minus aria-label="Kurangi jumlah"><i class="bi bi-dash"></i></button>
+                                        <input type="number" name="quantity" value="{{ max(1, (int) old('quantity', 1)) }}" min="1" max="{{ min(99, $product->stock) }}" aria-label="Jumlah produk">
+                                        <button type="button" data-qty-plus aria-label="Tambah jumlah"><i class="bi bi-plus"></i></button>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-brand flex-grow-1">
+                                        <i class="bi bi-bag-plus me-1"></i> Tambah ke keranjang
+                                    </button>
+                                    <button type="submit" class="btn btn-brand flex-grow-1" formaction="{{ route('checkout.direct') }}">
+                                        <i class="bi bi-lightning-charge me-1"></i> Checkout langsung
+                                    </button>
+                                </form>
+                            @else
+                                <a href="{{ route('login') }}" class="btn btn-brand w-100">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Masuk untuk membeli
+                                </a>
+                                <div class="info-note">
+                                    <i class="bi bi-lock"></i>
+                                    <span>Masuk atau daftar akun terlebih dahulu untuk checkout atau menambahkan produk ke keranjang dan melihat pesanan Anda.</span>
                                 </div>
-                                <button type="submit" class="btn btn-brand flex-grow-1">
-                                    <i class="bi bi-bag-plus me-1"></i> Tambah ke keranjang
-                                </button>
-                            </form>
+                            @endauth
 
                             <div class="info-note">
                                 <i class="bi bi-truck"></i>
-                                <span>Ongkir dihitung otomatis saat checkout berdasarkan kota tujuan dan berat pesanan. Pembayaran dapat melalui transfer, QRIS, atau COD.</span>
+                                <span>Bisa checkout langsung tanpa menyimpan produk di keranjang. Ongkir dihitung otomatis saat checkout berdasarkan kota tujuan dan berat pesanan. Pembayaran dapat melalui transfer, QRIS, atau COD.</span>
                             </div>
                         @else
                             <div class="alert alert-warning mb-0">

@@ -5,10 +5,14 @@
 @php
     $selectedCity = (string) old('city_id', 278);
     $paymentDescriptions = [
-        'transfer' => 'Transfer ke rekening toko, lalu unggah bukti pembayaran.',
-        'qris' => 'Pindai kode QRIS toko, lalu unggah bukti pembayaran.',
+        'transfer' => 'Simulasi transfer ke rekening toko. Unggah bukti setelah pesanan dibuat.',
+        'qris' => 'Simulasi QRIS. Pindai kode pada detail pesanan lalu unggah bukti.',
+        'midtrans' => 'Bayar semua pesanan toko dalam satu transaksi aman melalui Midtrans.',
         'cod' => 'Bayar tunai kepada kurir saat pesanan diterima.',
     ];
+    $selectedPayment = old('payment_method', $paymentMethods[0]->value ?? 'cod');
+    $isDirectCheckout = ($selection['mode'] ?? 'cart') === 'direct';
+    $firstProduct = $groups->first()['items']->first()->product;
 @endphp
 
 @section('content')
@@ -17,12 +21,22 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('cart.index') }}">Keranjang</a></li>
+                    @if ($isDirectCheckout)
+                        <li class="breadcrumb-item"><a href="{{ route('products.show', $firstProduct) }}">Produk</a></li>
+                    @else
+                        <li class="breadcrumb-item"><a href="{{ route('cart.index') }}">Keranjang</a></li>
+                    @endif
                     <li class="breadcrumb-item active" aria-current="page">Checkout</li>
                 </ol>
             </nav>
             <h1>Checkout pesanan</h1>
-            <p>Lengkapi alamat, pilih layanan pengiriman tiap toko, dan tentukan metode pembayaran.</p>
+            <p>
+                @if ($isDirectCheckout)
+                    Checkout langsung tanpa menyimpan produk ke keranjang. Lengkapi alamat, layanan pengiriman, dan metode pembayaran.
+                @else
+                    Lengkapi alamat, pilih layanan pengiriman tiap toko, dan tentukan metode pembayaran. Hanya produk yang dipilih yang akan diproses.
+                @endif
+            </p>
         </div>
     </section>
 
@@ -35,8 +49,48 @@
                 </div>
             @endif
 
+            @if ($midtransReady)
+                <div class="alert alert-info app-alert mb-3" role="status" style="background:#eef4fb;border-color:#dbe7f5;color:#255b9b;">
+                    <i class="bi bi-credit-card-2-front-fill"></i>
+                    <div>
+                        Pembayaran online Midtrans aktif pada mode
+                        <strong>{{ $midtransAvailability['environment'] === 'production' ? 'production' : 'Sandbox' }}</strong>.
+                        Satu transaksi akan mencakup seluruh toko, lalu dana dialokasikan per pesanan melalui
+                        <strong>{{ $midtransAvailability['route'] === 'split' ? 'transaction split' : 'disbursement API' }}</strong>.
+                    </div>
+                </div>
+            @elseif ($midtransCheckoutEnabled)
+                <div class="alert alert-warning app-alert mb-3" role="alert">
+                    <i class="bi bi-shield-exclamation"></i>
+                    <div>
+                        <strong>Midtrans belum siap digunakan.</strong>
+                        {{ $midtransAvailability['reason'] ?? 'Prasyarat Midtrans belum lengkap.' }}
+                        Sementara ini gunakan Transfer Bank, QRIS simulasi, atau COD.
+                    </div>
+                </div>
+            @else
+                <div class="alert alert-info app-alert mb-3" role="status" style="background:#eef4fb;border-color:#dbe7f5;color:#255b9b;">
+                    <i class="bi bi-wallet2"></i>
+                    <div>
+                        <strong>Pembayaran manual (simulasi) aktif.</strong>
+                        Transfer Bank dan QRIS diverifikasi penjual melalui bukti pembayaran. COD dibayar saat pesanan diterima.
+                        Pembayaran online Midtrans belum diaktifkan pada demo ini.
+                    </div>
+                </div>
+            @endif
+
             <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" data-shipping-url="{{ route('shipping.cost') }}" data-subtotal="{{ $subtotal }}">
                 @csrf
+                <input type="hidden" name="checkout_token" value="{{ old('checkout_token', $checkoutToken) }}">
+
+                @if ($isDirectCheckout)
+                    <input type="hidden" name="product_id" value="{{ $selection['product_id'] }}">
+                    <input type="hidden" name="quantity" value="{{ $selection['quantity'] }}">
+                @else
+                    @foreach ($selection['cart_item_ids'] as $selectedCartItemId)
+                        <input type="hidden" name="items[]" value="{{ $selectedCartItemId }}">
+                    @endforeach
+                @endif
 
                 <div class="checkout-grid">
                     <div>
@@ -154,7 +208,7 @@
                             <div class="payment-options">
                                 @foreach ($paymentMethods as $method)
                                     <div class="payment-option">
-                                        <input type="radio" id="payment-{{ $method->value }}" name="payment_method" value="{{ $method->value }}" @checked(old('payment_method', 'transfer') === $method->value) required>
+                                        <input type="radio" id="payment-{{ $method->value }}" name="payment_method" value="{{ $method->value }}" @checked($selectedPayment === $method->value) required>
                                         <label for="payment-{{ $method->value }}">
                                             <i class="bi {{ $method->icon() }}"></i>
                                             <strong>{{ $method->label() }}</strong>
@@ -167,7 +221,14 @@
 
                             <div class="payment-hint">
                                 <i class="bi bi-info-circle"></i>
-                                <span>Pembayaran transfer dan QRIS diverifikasi penjual setelah bukti diunggah. Pesanan COD dikonfirmasi penjual dan dibayar saat diterima.</span>
+                                <span>
+                                    @if ($midtransReady)
+                                        Midtrans memverifikasi pembayaran secara otomatis. Transfer/QRIS simulasi diverifikasi penjual melalui bukti bayar.
+                                    @else
+                                        Transfer/QRIS merupakan simulasi: unggah bukti pembayaran pada detail pesanan agar penjual dapat memverifikasi.
+                                    @endif
+                                    Pesanan COD dikonfirmasi penjual dan dibayar saat diterima.
+                                </span>
                             </div>
 
                             <div class="alert alert-danger d-none mt-3 mb-0" data-shipping-error role="alert"></div>
@@ -210,10 +271,19 @@
 
                         <div class="info-note">
                             <i class="bi bi-bag-check"></i>
-                            <span>{{ $groups->count() }} pesanan akan dibuat, satu untuk setiap toko. Pembayaran dan pengiriman dikelola terpisah per pesanan.</span>
+                            <span>
+                                {{ $groups->count() }} pesanan akan dibuat, satu untuk setiap toko.
+                                @if ($midtransReady)
+                                    Pembayaran Midtrans digabung menjadi satu transaksi; transfer/QRIS simulasi dan COD diselesaikan per pesanan.
+                                @else
+                                    Transfer/QRIS simulasi diselesaikan per pesanan melalui unggah bukti; COD dibayar terpisah saat barang diterima.
+                                @endif
+                            </span>
                         </div>
 
-                        <a href="{{ route('cart.index') }}" class="btn btn-ghost btn-sm w-100 mt-2"><i class="bi bi-arrow-left me-1"></i> Kembali ke keranjang</a>
+                        <a href="{{ $isDirectCheckout ? route('products.show', $firstProduct) : route('cart.index') }}" class="btn btn-ghost btn-sm w-100 mt-2">
+                            <i class="bi bi-arrow-left me-1"></i> {{ $isDirectCheckout ? 'Kembali ke produk' : 'Kembali ke keranjang' }}
+                        </a>
                     </aside>
                 </div>
             </form>

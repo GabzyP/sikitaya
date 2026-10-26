@@ -4,7 +4,7 @@
 
 @section('content')
     <h1 class="auth-title">Mulai di Sikitaya</h1>
-    <p class="auth-sub">Daftar sebagai pembeli atau buka toko untuk berjualan.</p>
+    <p class="auth-sub">Daftar sebagai pembeli, atau buka akun penjual yang otomatis terhubung dengan satu toko UMKM.</p>
 
     <form method="POST" action="{{ route('register.store') }}" class="auth-form" novalidate>
         @csrf
@@ -21,7 +21,7 @@
                 <input type="radio" name="role" id="role-seller" value="seller" @checked(old('role') === 'seller')>
                 <label for="role-seller">
                     <i class="bi bi-shop"></i>
-                    <span>Penjual <small>Buka toko UMKM</small></span>
+                    <span>Penjual &amp; Toko <small>Satu akun untuk satu toko UMKM</small></span>
                 </label>
             </div>
         </div>
@@ -45,6 +45,10 @@
         </div>
 
         <div data-store-fields hidden>
+            <div class="alert alert-success app-alert py-2 mb-3" role="alert" style="font-size:.74rem;">
+                <i class="bi bi-shop"></i>
+                <div>Akun penjual dan toko adalah satu kesatuan. Satu akun hanya mengelola satu toko.</div>
+            </div>
             <div class="mb-3">
                 <label for="store_name" class="form-label">Nama toko</label>
                 <input id="store_name" type="text" name="store_name" value="{{ old('store_name') }}" class="form-control @error('store_name') is-invalid @enderror" placeholder="Contoh: Dapur Bu Sari" data-required-when-seller="true">

@@ -17,7 +17,7 @@
             <div class="store-hero-main">
                 <div class="store-hero-mark">
                     @if ($store->logo_url)
-                        <img src="{{ $store->logo_url }}" alt="Logo {{ $store->name }}">
+                        <img src="{{ $store->logo_url }}" alt="Foto {{ $store->name }}">
                     @else
                         {{ $store->initials }}
                     @endif

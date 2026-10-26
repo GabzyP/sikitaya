@@ -81,6 +81,7 @@
                             </td>
                             <td>
                                 <div class="table-actions">
+                                    <a href="{{ route('admin.store-payments.edit', $store) }}" class="btn-table" title="Pengaturan pembayaran" aria-label="Pengaturan pembayaran {{ $store->name }}"><i class="bi bi-credit-card"></i></a>
                                     <a href="{{ route('stores.show', $store) }}" target="_blank" class="btn-table" title="Lihat toko" aria-label="Lihat toko {{ $store->name }}"><i class="bi bi-box-arrow-up-right"></i></a>
                                     <form action="{{ route('admin.stores.toggle', $store) }}" method="POST" onsubmit="return confirm('{{ $store->is_active ? 'Nonaktifkan' : 'Aktifkan' }} toko {{ addslashes($store->name) }}?')">
                                         @csrf

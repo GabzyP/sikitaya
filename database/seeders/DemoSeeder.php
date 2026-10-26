@@ -45,7 +45,7 @@ class DemoSeeder extends Seeder
                     'name' => 'Dapur Bu Sari',
                     'slug' => 'dapur-bu-sari',
                     'description' => 'Masakan rumahan khas Medan dengan bumbu segar dan resep keluarga. Dimasak dalam jumlah terbatas setiap hari.',
-                    'logo' => 'images/stores/dapur-bu-sari.svg',
+                    'logo' => 'images/stores/dapur-bu-sari.jpg',
                     'phone' => '081364445566',
                     'address' => 'Jl. Jamin Ginting No. 112, Medan Tuntungan',
                 ],
@@ -57,7 +57,7 @@ class DemoSeeder extends Seeder
                     'name' => 'Kopi Tanjung',
                     'slug' => 'kopi-tanjung',
                     'description' => 'Menyangrai biji kopi Sumatera Utara dalam batch kecil. Arabika Gayo dan Robusta Sidikalang pilihan.',
-                    'logo' => 'images/stores/kopi-tanjung.svg',
+                    'logo' => 'images/stores/kopi-tanjung.jpg',
                     'phone' => '081365556677',
                     'address' => 'Jl. Sei Deli No. 8, Medan Petisah',
                 ],
@@ -69,7 +69,7 @@ class DemoSeeder extends Seeder
                     'name' => 'Tenun Deli',
                     'slug' => 'tenun-deli',
                     'description' => 'Kriya tenun dan ulos tangan dari perajin Deli Serdang dan Samosir. Setiap helai dibuat dengan teliti.',
-                    'logo' => 'images/stores/tenun-deli.svg',
+                    'logo' => 'images/stores/tenun-deli.jpg',
                     'phone' => '081366667788',
                     'address' => 'Jl. Sutomo No. 21, Medan Baru',
                 ],
@@ -81,7 +81,7 @@ class DemoSeeder extends Seeder
                     'name' => 'Manisan Medan',
                     'slug' => 'manisan-medan',
                     'description' => 'Oleh-oleh khas Medan: bika ambon, teri premium, sambal teri, dan gula aren organik.',
-                    'logo' => 'images/stores/manisan-medan.svg',
+                    'logo' => 'images/stores/manisan-medan.jpg',
                     'phone' => '081367778899',
                     'address' => 'Jl. Gatot Subroto No. 77, Medan Kota',
                 ],
@@ -116,22 +116,22 @@ class DemoSeeder extends Seeder
 
         $products = [
             [
-                'slug' => 'rendang-dapur-bu-sari', 'store' => 'dapur-bu-sari', 'category' => 'Kuliner',
+                'slug' => 'rendang-dapur-bu-sari', 'store' => 'dapur-bu-sari', 'category' => 'Makanan',
                 'name' => 'Rendang Dapur Bu Sari', 'price' => 45000, 'stock' => 24, 'weight' => 500,
                 'description' => 'Rendang daging sapi empuk dengan rempah kering khas Minang, dimasak perlahan selama enam jam. Kemasan 400 gram siap hangatkan.',
             ],
             [
-                'slug' => 'sambal-andaliman', 'store' => 'dapur-bu-sari', 'category' => 'Kuliner',
+                'slug' => 'sambal-andaliman', 'store' => 'dapur-bu-sari', 'category' => 'Makanan',
                 'name' => 'Sambal Andaliman', 'price' => 28000, 'stock' => 40, 'weight' => 250,
                 'description' => 'Sambal segar dengan andaliman khas Sumatera Utara yang pedas dan wangi. Cocok untuk ikan bakar dan nasi hangat.',
             ],
             [
-                'slug' => 'bika-ambon-keju', 'store' => 'dapur-bu-sari', 'category' => 'Kuliner',
+                'slug' => 'bika-ambon-keju', 'store' => 'dapur-bu-sari', 'category' => 'Makanan',
                 'name' => 'Bika Ambon Keju Spesial', 'price' => 55000, 'stock' => 15, 'weight' => 700,
                 'description' => 'Bika ambon lembut dengan topping keju melimpah. Dipanggang fresh setiap pagi dengan santan pilihan.',
             ],
             [
-                'slug' => 'keripik-singkong-balado', 'store' => 'dapur-bu-sari', 'category' => 'Kuliner',
+                'slug' => 'keripik-singkong-balado', 'store' => 'dapur-bu-sari', 'category' => 'Makanan',
                 'name' => 'Keripik Singkong Balado', 'price' => 22000, 'stock' => 50, 'weight' => 300,
                 'description' => 'Keripik singkong renyah dengan bumbu balado pedas manis. Camilan favorit untuk menemani waktu santai.',
             ],
@@ -156,22 +156,22 @@ class DemoSeeder extends Seeder
                 'description' => 'Cold brew dari arabika Gayo yang diekstraksi dingin selama 18 jam. Segar, rendah asam, dan tanpa gula.',
             ],
             [
-                'slug' => 'ulos-sadum', 'store' => 'tenun-deli', 'category' => 'Fashion & Kriya',
+                'slug' => 'ulos-sadum', 'store' => 'tenun-deli', 'category' => 'Pakaian',
                 'name' => 'Ulos Sadum Tenun Tangan', 'price' => 385000, 'stock' => 6, 'weight' => 500,
                 'description' => 'Ulos sadum tenun tangan dengan motif dan warna khas Batak. Ditenun oleh perajin di Deli Serdang.',
             ],
             [
-                'slug' => 'kain-tenun-meski', 'store' => 'tenun-deli', 'category' => 'Fashion & Kriya',
+                'slug' => 'kain-tenun-meski', 'store' => 'tenun-deli', 'category' => 'Kriya',
                 'name' => 'Kain Tenun Motif Meski', 'price' => 275000, 'stock' => 8, 'weight' => 450,
                 'description' => 'Kain tenun bermotif meski dengan pewarna alam. Panjang 2 meter, cocok untuk busana dan dekorasi.',
             ],
             [
-                'slug' => 'tas-anyaman-pandan', 'store' => 'tenun-deli', 'category' => 'Fashion & Kriya',
+                'slug' => 'tas-anyaman-pandan', 'store' => 'tenun-deli', 'category' => 'Kriya',
                 'name' => 'Tas Anyaman Pandan', 'price' => 125000, 'stock' => 12, 'weight' => 400,
                 'description' => 'Tas anyaman pandan buatan tangan dengan lining kain tenun. Ringan, kuat, dan ramah lingkungan.',
             ],
             [
-                'slug' => 'selendang-tenun-deli', 'store' => 'tenun-deli', 'category' => 'Fashion & Kriya',
+                'slug' => 'selendang-tenun-deli', 'store' => 'tenun-deli', 'category' => 'Pakaian',
                 'name' => 'Selendang Tenun Deli', 'price' => 185000, 'stock' => 10, 'weight' => 300,
                 'description' => 'Selendang tenun dengan warna hangat dan motif geometris. Nyaman dipakai untuk acara formal maupun kasual.',
             ],
@@ -208,7 +208,7 @@ class DemoSeeder extends Seeder
                     'price' => $product['price'],
                     'stock' => $product['stock'],
                     'weight' => $product['weight'],
-                    'image' => 'images/products/'.$product['slug'].'.svg',
+                    'image' => 'images/products/'.$product['slug'].'.jpg',
                     'is_active' => true,
                 ]
             );

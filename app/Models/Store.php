@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MidtransMerchantStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use LogicException;
 
 class Store extends Model
 {
@@ -26,13 +28,35 @@ class Store extends Model
         'city_name',
         'province_name',
         'is_active',
+        'midtrans_merchant_id',
+        'midtrans_merchant_status',
+        'payout_bank_code',
+        'payout_bank_name',
+        'payout_account_number',
+        'payout_account_name',
+        'payout_account_verified_at',
+        'payout_account_verified_by',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'midtrans_merchant_status' => MidtransMerchantStatus::class,
+            'payout_account_number' => 'encrypted',
+            'payout_account_verified_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Store $store) {
+            $owner = User::find($store->user_id);
+
+            if (! $owner?->isSeller()) {
+                throw new LogicException('Toko hanya dapat dimiliki oleh akun penjual.');
+            }
+        });
     }
 
     public function getRouteKeyName(): string
@@ -58,6 +82,35 @@ class Store extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function isReadyForSplit(): bool
+    {
+        return filled($this->midtrans_merchant_id)
+            && $this->midtrans_merchant_status?->canReceiveSplit();
+    }
+
+    public function hasVerifiedPayoutAccount(): bool
+    {
+        return filled($this->payout_bank_code)
+            && filled($this->payout_account_number)
+            && filled($this->payout_account_name)
+            && $this->payout_account_verified_at !== null;
+    }
+
+    public function maskedPayoutAccountNumber(): string
+    {
+        $number = (string) ($this->payout_account_number ?? '');
+
+        if ($number === '') {
+            return '-';
+        }
+
+        if (Str::length($number) <= 4) {
+            return str_repeat('•', Str::length($number));
+        }
+
+        return str_repeat('•', Str::length($number) - 4).Str::substr($number, -4);
     }
 
     public function getInitialsAttribute(): string

@@ -31,6 +31,9 @@
             <div>
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                     <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                    @if ($order->paymentTransaction)
+                        <span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span>
+                    @endif
                     <span class="badge-soft"><i class="bi {{ $order->payment_method->icon() }}"></i> {{ $order->payment_method->label() }}</span>
                     @if ($order->payment_proof)
                         <span class="badge-soft blue"><i class="bi bi-paperclip"></i> Bukti terunggah</span>
@@ -144,24 +147,40 @@
                 <h2><i class="bi bi-lightning-charge text-brand me-1"></i> Tindakan penjual</h2>
 
                 @if ($order->status === \App\Enums\OrderStatus::Menunggu)
-                    <p>
-                        @if ($order->requiresPaymentProof())
-                            Periksa bukti pembayaran dari pembeli, lalu konfirmasi jika dana sudah diterima.
+                    @if ($order->payment_method === \App\Enums\PaymentMethod::Midtrans)
+                        @if ($order->paymentTransaction?->isPending())
+                            <p>Pembayaran online melalui Midtrans masih menunggu. Pesanan akan otomatis berubah menjadi dibayar setelah gateway mengonfirmasi settlement.</p>
+                            <div class="info-banner mb-0">
+                                <i class="bi bi-hourglass-split"></i>
+                                <span>Jangan memproses pengiriman sebelum status pembayaran lunas. Pembeli dapat melanjutkan pembayaran dari halaman pesanan.</span>
+                            </div>
                         @else
-                            Pesanan COD: konfirmasi pesanan untuk mulai menyiapkan pengiriman. Pembeli membayar saat pesanan diterima.
+                            <p>Pembayaran online tidak selesai atau telah ditutup. Pesanan ini tidak dapat dikonfirmasi secara manual.</p>
+                            <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:.72rem;">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Status Midtrans: <strong>{{ $order->paymentTransaction?->status->label() ?? 'tidak tersedia' }}</strong>. Pembeli harus membuat pembayaran baru sebelum pesanan dapat diproses.
+                            </div>
                         @endif
-                    </p>
-
-                    @if ($order->requiresPaymentProof() && ! $order->payment_proof)
-                        <div class="alert alert-warning py-2 px-3" style="font-size:.72rem;">
-                            <i class="bi bi-exclamation-triangle me-1"></i> Pembeli belum mengunggah bukti pembayaran. Konfirmasi belum dapat dilakukan.
-                        </div>
-                        <button type="button" class="btn btn-brand" disabled><i class="bi bi-check2-circle me-1"></i> Konfirmasi pembayaran</button>
                     @else
-                        <form action="{{ route('seller.orders.confirm', $order) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran pesanan ini?')">
-                            @csrf
-                            <button type="submit" class="btn btn-brand"><i class="bi bi-check2-circle me-1"></i> {{ $order->payment_method === \App\Enums\PaymentMethod::Cod ? 'Konfirmasi pesanan COD' : 'Konfirmasi pembayaran' }}</button>
-                        </form>
+                        <p>
+                            @if ($order->requiresPaymentProof())
+                                Periksa bukti pembayaran dari pembeli, lalu konfirmasi jika dana sudah diterima.
+                            @else
+                                Pesanan COD: konfirmasi pesanan untuk mulai menyiapkan pengiriman. Pembeli membayar saat pesanan diterima.
+                            @endif
+                        </p>
+
+                        @if ($order->requiresPaymentProof() && ! $order->payment_proof)
+                            <div class="alert alert-warning py-2 px-3" style="font-size:.72rem;">
+                                <i class="bi bi-exclamation-triangle me-1"></i> Pembeli belum mengunggah bukti pembayaran. Konfirmasi belum dapat dilakukan.
+                            </div>
+                            <button type="button" class="btn btn-brand" disabled><i class="bi bi-check2-circle me-1"></i> Konfirmasi pembayaran</button>
+                        @else
+                            <form action="{{ route('seller.orders.confirm', $order) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran pesanan ini?')">
+                                @csrf
+                                <button type="submit" class="btn btn-brand"><i class="bi bi-check2-circle me-1"></i> {{ $order->payment_method === \App\Enums\PaymentMethod::Cod ? 'Konfirmasi pesanan COD' : 'Konfirmasi pembayaran' }}</button>
+                            </form>
+                        @endif
                     @endif
                 @elseif ($order->status === \App\Enums\OrderStatus::Dibayar)
                     <p>Pembayaran sudah dikonfirmasi. Masukkan nomor resi untuk menandai pesanan sebagai dikirim.</p>
@@ -198,6 +217,10 @@
                 </div>
                 <div class="detail-list">
                     <div><span class="label">Metode</span><span class="value">{{ $order->payment_method->label() }}</span></div>
+                    @if ($order->paymentTransaction)
+                        <div><span class="label">Referensi</span><span class="value">{{ $order->paymentTransaction->reference }}</span></div>
+                        <div><span class="label">Status online</span><span class="value">{{ $order->paymentTransaction->status->label() }}</span></div>
+                    @endif
                     <div><span class="label">Total tagihan</span><span class="value text-brand">{{ rupiah($order->total) }}</span></div>
                     <div><span class="label">Dibayar pada</span><span class="value">{{ $order->paid_at ? tanggal_indonesia($order->paid_at, true) : '-' }}</span></div>
                 </div>
@@ -215,6 +238,11 @@
                         </div>
                         <a href="{{ $order->paymentProofUrl() }}" target="_blank" rel="noopener" class="btn btn-outline-brand btn-sm ms-auto">Buka</a>
                     </div>
+                @elseif ($order->payment_method === \App\Enums\PaymentMethod::Midtrans)
+                    <div class="info-banner mt-3 mb-0">
+                        <i class="bi bi-credit-card-2-front"></i>
+                        <span>Pembayaran diverifikasi otomatis oleh Midtrans. Bukti unggah manual tidak diperlukan.</span>
+                    </div>
                 @elseif ($order->requiresPaymentProof())
                     <div class="info-banner mt-3 mb-0">
                         <i class="bi bi-paperclip"></i>
@@ -224,6 +252,13 @@
                     <div class="info-banner mt-3 mb-0">
                         <i class="bi bi-cash-coin"></i>
                         <span>Pesanan COD — pembayaran dilakukan saat pesanan diterima.</span>
+                    </div>
+                @endif
+
+                @if ($order->paymentAllocation)
+                    <div class="detail-list mt-3">
+                        <div><span class="label">Alokasi dana</span><span class="value">{{ $order->paymentAllocation->status->label() }}</span></div>
+                        <div><span class="label">Dana penjual</span><span class="value text-brand">{{ rupiah($order->paymentAllocation->net_amount) }}</span></div>
                     </div>
                 @endif
             </div>

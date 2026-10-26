@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Buyer;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MidtransNotificationController;
 use App\Http\Controllers\Seller;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\StorefrontController;
@@ -17,6 +18,7 @@ Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('
 Route::get('/toko', [StorefrontController::class, 'index'])->name('stores.index');
 Route::get('/toko/{store:slug}', [StorefrontController::class, 'show'])->name('stores.show');
 Route::get('/api/ongkir', [ShippingController::class, 'cost'])->name('shipping.cost');
+Route::post('/midtrans/notification', MidtransNotificationController::class)->name('midtrans.notification');
 
 Route::middleware('guest')->group(function () {
     Route::get('/masuk', [LoginController::class, 'create'])->name('login');
@@ -34,6 +36,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('/keranjang/{cartItem}', [Buyer\CartController::class, 'destroy'])->name('cart.destroy');
     Route::delete('/keranjang', [Buyer\CartController::class, 'clear'])->name('cart.clear');
 
+    Route::post('/checkout/langsung', [Buyer\CheckoutController::class, 'direct'])->name('checkout.direct');
     Route::get('/checkout', [Buyer\CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [Buyer\CheckoutController::class, 'store'])->name('checkout.store');
 
@@ -41,6 +44,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/pesanan/{order}', [Buyer\OrderController::class, 'show'])->name('orders.show');
     Route::post('/pesanan/{order}/bukti-bayar', [Buyer\OrderController::class, 'uploadProof'])->name('orders.proof');
     Route::post('/pesanan/{order}/selesai', [Buyer\OrderController::class, 'complete'])->name('orders.complete');
+
+    Route::get('/pembayaran/{paymentTransaction}', [Buyer\PaymentController::class, 'show'])->name('payments.show');
+    Route::post('/pembayaran/{paymentTransaction}/ulangi', [Buyer\PaymentController::class, 'retry'])->name('payments.retry');
+    Route::post('/pembayaran/{paymentTransaction}/sinkron', [Buyer\PaymentController::class, 'sync'])->name('payments.sync');
 });
 
 Route::prefix('penjual')->name('seller.')->middleware(['auth', 'active', 'role:seller'])->group(function () {
@@ -77,6 +84,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'role:admi
 
     Route::get('/toko', [Admin\StoreController::class, 'index'])->name('stores.index');
     Route::post('/toko/{store}/status', [Admin\StoreController::class, 'toggle'])->name('stores.toggle');
+    Route::get('/toko/{store}/pembayaran', [Admin\StorePaymentController::class, 'edit'])->name('store-payments.edit');
+    Route::put('/toko/{store}/pembayaran', [Admin\StorePaymentController::class, 'update'])->name('store-payments.update');
+    Route::post('/toko/{store}/pembayaran/verifikasi', [Admin\StorePaymentController::class, 'verify'])->name('store-payments.verify');
+
+    Route::get('/pembayaran', [Admin\PaymentAllocationController::class, 'index'])->name('payments.index');
+    Route::get('/pembayaran/{paymentTransaction}', [Admin\PaymentAllocationController::class, 'show'])->name('payments.show');
+    Route::post('/pembayaran/{paymentTransaction}/sinkron', [Admin\PaymentAllocationController::class, 'sync'])->name('payments.sync');
+    Route::post('/alokasi/{allocation}/setujui', [Admin\PaymentAllocationController::class, 'approve'])->name('allocations.approve');
+    Route::post('/alokasi/{allocation}/cairkan', [Admin\PaymentAllocationController::class, 'send'])->name('allocations.send');
+    Route::post('/alokasi/{allocation}/sinkron', [Admin\PaymentAllocationController::class, 'syncAllocation'])->name('allocations.sync');
 
     Route::get('/kategori', [Admin\CategoryController::class, 'index'])->name('categories.index');
     Route::get('/kategori/tambah', [Admin\CategoryController::class, 'create'])->name('categories.create');

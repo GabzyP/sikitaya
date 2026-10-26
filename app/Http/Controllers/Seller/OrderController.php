@@ -23,7 +23,7 @@ class OrderController extends Controller
         $store = auth()->user()->store;
 
         $orders = Order::forStore($store->id)
-            ->with(['user', 'items'])
+            ->with(['user', 'items', 'paymentTransaction'])
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['q'] ?? null, function ($query, $q) {
                 $query->where(function ($builder) use ($q) {
@@ -47,7 +47,7 @@ class OrderController extends Controller
     {
         $this->authorizeOrder($order);
 
-        $order->load(['user', 'items.product']);
+        $order->load(['user', 'items.product', 'paymentTransaction', 'paymentAllocation']);
 
         return view('seller.orders.show', compact('order'));
     }

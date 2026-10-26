@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/hanni.jpg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Masuk') · Sikitaya</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +17,7 @@
     <div class="auth-shell">
         <section class="auth-panel">
             <a href="{{ route('home') }}" class="brand brand-light text-decoration-none">
-                <span class="brand-mark">S</span>
+                @include('partials.brand-logo')
                 <span class="brand-text">
                     <span class="brand-name">Sikitaya</span>
                     <span class="brand-tag">UMKM KOTA MEDAN</span>
@@ -27,9 +28,9 @@
                 <h1>Dari tangan warga Medan, untuk meja Anda.</h1>
                 <p class="auth-panel-lead">Temukan kuliner, kopi, tenun, dan oleh-oleh pilihan langsung dari pelaku UMKM Kota Medan.</p>
                 <div class="auth-collage" aria-hidden="true">
-                    <img src="{{ asset('images/products/rendang-dapur-bu-sari.svg') }}" alt="">
-                    <img class="collage-main" src="{{ asset('images/products/kopi-arabika-gayo.svg') }}" alt="">
-                    <img src="{{ asset('images/products/ulos-sadum.svg') }}" alt="">
+                    <img src="{{ asset('images/products/rendang-dapur-bu-sari.jpg') }}" alt="">
+                    <img class="collage-main" src="{{ asset('images/products/kopi-arabika-gayo.jpg') }}" alt="">
+                    <img src="{{ asset('images/products/ulos-sadum.jpg') }}" alt="">
                 </div>
                 <div class="auth-testimonial">
                     <div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
@@ -43,7 +44,7 @@
         <section class="auth-form-side">
             <div class="auth-form-wrap">
                 <a href="{{ route('home') }}" class="brand auth-mobile-brand text-decoration-none">
-                    <span class="brand-mark">S</span>
+                    @include('partials.brand-logo')
                     <span class="brand-text">
                         <span class="brand-name">Sikitaya</span>
                         <span class="brand-tag">UMKM KOTA MEDAN</span>

@@ -31,6 +31,9 @@
             <div>
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                     <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                    @if ($order->paymentTransaction)
+                        <span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span>
+                    @endif
                     <span class="badge-soft"><i class="bi {{ $order->payment_method->icon() }}"></i> {{ $order->payment_method->label() }}</span>
                 </div>
                 <div class="order-meta">{{ $order->status->description() }}</div>
@@ -161,13 +164,26 @@
             <div class="payment-panel mb-3">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <h2 class="mb-0">Pembayaran</h2>
-                    <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                    @if ($order->paymentTransaction)
+                        <span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span>
+                    @else
+                        <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                    @endif
                 </div>
                 <div class="detail-list">
                     <div><span class="label">Metode</span><span class="value">{{ $order->payment_method->label() }}</span></div>
+                    @if ($order->paymentTransaction)
+                        <div><span class="label">Referensi</span><span class="value">{{ $order->paymentTransaction->reference }}</span></div>
+                    @endif
                     <div><span class="label">Total</span><span class="value text-brand">{{ rupiah($order->total) }}</span></div>
                     <div><span class="label">Dibayar pada</span><span class="value">{{ $order->paid_at ? tanggal_indonesia($order->paid_at, true) : '-' }}</span></div>
                 </div>
+
+                @if ($order->paymentTransaction)
+                    <a href="{{ route('admin.payments.show', $order->paymentTransaction) }}" class="btn btn-outline-brand btn-sm w-100 mt-3">
+                        <i class="bi bi-diagram-3 me-1"></i> Kelola pembayaran gabungan
+                    </a>
+                @endif
 
                 @if ($order->payment_proof)
                     <div class="proof-preview mt-3 mb-0">
@@ -181,6 +197,11 @@
                             <div class="text-muted">{{ $order->payment_proof_uploaded_at ? tanggal_indonesia($order->payment_proof_uploaded_at, true) : '' }}</div>
                         </div>
                         <a href="{{ $order->paymentProofUrl() }}" target="_blank" rel="noopener" class="btn btn-outline-brand btn-sm ms-auto">Buka</a>
+                    </div>
+                @elseif ($order->payment_method === \App\Enums\PaymentMethod::Midtrans)
+                    <div class="info-banner mt-3 mb-0">
+                        <i class="bi bi-credit-card-2-front"></i>
+                        <span>Pembayaran diverifikasi otomatis oleh Midtrans. Tidak ada bukti unggah manual.</span>
                     </div>
                 @elseif ($order->requiresPaymentProof())
                     <div class="info-banner mt-3 mb-0">

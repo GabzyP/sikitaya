@@ -11,9 +11,10 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Kuliner', 'icon' => 'bi-bowl-hot', 'description' => 'Masakan rumahan, lauk, dan camilan khas Medan.'],
+            ['name' => 'Makanan', 'icon' => 'bi-egg-fried', 'description' => 'Masakan rumahan, lauk, dan camilan khas Medan.'],
             ['name' => 'Minuman', 'icon' => 'bi-cup-hot', 'description' => 'Kopi, teh, dan minuman segar dari UMKM lokal.'],
-            ['name' => 'Fashion & Kriya', 'icon' => 'bi-bag-heart', 'description' => 'Tenun, ulos, tas anyaman, dan kriya tangan.'],
+            ['name' => 'Pakaian', 'icon' => 'bi-bag', 'description' => 'Tenun, ulos, dan busana karya perajin lokal.'],
+            ['name' => 'Kriya', 'icon' => 'bi-palette', 'description' => 'Anyaman, tekstil, dan kerajinan tangan.'],
             ['name' => 'Oleh-oleh', 'icon' => 'bi-gift', 'description' => 'Bingkisan khas Medan untuk dibawa pulang.'],
         ];
 

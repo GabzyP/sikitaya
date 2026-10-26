@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/hanni.jpg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="@yield('meta_description', 'Sikitaya adalah marketplace UMKM Kota Medan. Temukan produk lokal, belanja langsung dari penjual, dan dukung usaha warga Medan.')">
     <title>@yield('title', 'Sikitaya') · UMKM Kota Medan</title>

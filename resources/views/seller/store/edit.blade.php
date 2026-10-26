@@ -88,17 +88,17 @@
 
                 <div class="col-lg-4">
                     <div class="dash-form-panel mb-3">
-                        <h2>Logo toko</h2>
+                        <h2>Foto toko</h2>
                         <div class="image-upload text-center">
                             @if ($store->logo_url)
-                                <img src="{{ $store->logo_url }}" alt="Logo {{ $store->name }}" class="image-upload-preview mb-2" id="logo-preview" style="width:110px;height:110px;border-radius:18px;">
+                                <img src="{{ $store->logo_url }}" alt="Foto {{ $store->name }}" class="image-upload-preview mb-2" id="logo-preview" style="width:110px;height:110px;border-radius:18px;">
                             @else
                                 <div class="avatar-store mx-auto mb-2" id="logo-preview" style="width:110px;height:110px;border-radius:18px;font-size:2rem;">{{ $store->initials }}</div>
                             @endif
-                            <label for="logo" class="form-label d-block">Ganti logo</label>
+                            <label for="logo" class="form-label d-block">Ganti foto toko</label>
                             <input type="file" id="logo" name="logo" class="form-control form-control-sm @error('logo') is-invalid @enderror" accept=".jpg,.jpeg,.png,.webp" data-image-input="#logo-preview">
                             @error('logo')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text mt-2">JPG, PNG, atau WEBP · maksimal 2 MB.</div>
+                            <div class="form-text mt-2">Gunakan foto tempat usaha. JPG, PNG, atau WEBP · maksimal 2 MB.</div>
                         </div>
                     </div>
 

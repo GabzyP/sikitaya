@@ -1,6 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Toko UMKM Kota Medan')
+@php
+    $isGuest = auth()->guest();
+    $searchTerm = request('q');
+    $pageTitle = filled($searchTerm) ? 'Hasil toko untuk “'.$searchTerm.'”' : 'Toko UMKM yang bisa Anda dukung';
+@endphp
+
+@section('title', $pageTitle)
 
 @section('content')
     <section class="page-banner">
@@ -11,8 +17,17 @@
                     <li class="breadcrumb-item active" aria-current="page">Toko</li>
                 </ol>
             </nav>
-            <h1>Kenali penjual di balik produk</h1>
-            <p>Setiap toko dikelola langsung oleh pelaku UMKM Kota Medan. Kunjungi toko, kenali ceritanya, dan belanja produk unggulan mereka.</p>
+            @if ($isGuest)
+                <span class="guest-note"><i class="bi bi-eye"></i> Mode tamu · toko pilihan</span>
+            @endif
+            <h1>{{ $pageTitle }}</h1>
+            <p>
+                @if ($isGuest)
+                    Kenali penjual di balik produk UMKM Kota Medan. Masuk untuk melihat semua toko, cerita mereka, dan katalog lengkapnya.
+                @else
+                    Setiap toko dikelola langsung oleh pelaku UMKM Kota Medan. Kunjungi toko, kenali ceritanya, dan belanja produk unggulan mereka.
+                @endif
+            </p>
         </div>
     </section>
 
@@ -20,11 +35,15 @@
         <div class="container">
             <div class="catalog-toolbar">
                 <p class="result-count mb-0">
-                    <strong>{{ $stores->total() }}</strong> toko aktif terdaftar di Sikitaya
+                    @if ($isGuest)
+                        Menampilkan <strong>{{ $stores->count() }}</strong> dari <strong>{{ $stores->total() }}</strong> toko UMKM pilihan
+                    @else
+                        <strong>{{ $stores->total() }}</strong> toko aktif terdaftar di Sikitaya
+                    @endif
                 </p>
                 <form action="{{ route('stores.index') }}" method="GET" class="nav-search" style="min-width:240px;" role="search">
                     <i class="bi bi-search"></i>
-                    <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari nama toko..." aria-label="Cari toko">
+                    <input type="search" name="q" value="{{ $searchTerm }}" placeholder="Cari nama toko..." aria-label="Cari toko">
                     <button type="submit" class="visually-hidden">Cari</button>
                 </form>
             </div>
@@ -39,31 +58,20 @@
             @else
                 <div class="store-grid">
                     @foreach ($stores as $store)
-                        <article class="store-card">
-                            <div class="store-mark">
-                                @if ($store->logo_url)
-                                    <img src="{{ $store->logo_url }}" alt="Logo {{ $store->name }}">
-                                @else
-                                    {{ $store->initials }}
-                                @endif
-                            </div>
-                            <div class="store-info">
-                                <h3><a href="{{ route('stores.show', $store) }}">{{ $store->name }}</a></h3>
-                                <p class="store-location"><i class="bi bi-geo-alt"></i> {{ $store->city_name }}, {{ $store->province_name }}</p>
-                                <p class="store-desc">{{ $store->description ?: 'Toko UMKM Kota Medan yang dikelola langsung oleh pemiliknya.' }}</p>
-                                <div class="store-counts">
-                                    <span><i class="bi bi-box-seam"></i> {{ $store->products_count }} produk</span>
-                                    <span><i class="bi bi-patch-check"></i> Toko aktif</span>
-                                </div>
-                                <a href="{{ route('stores.show', $store) }}" class="btn btn-outline-brand btn-sm mt-3">Kunjungi toko <i class="bi bi-arrow-right ms-1"></i></a>
-                            </div>
-                        </article>
+                        @include('partials.store-card', ['store' => $store])
                     @endforeach
                 </div>
 
-                <div class="mt-4 d-flex justify-content-center">
-                    {{ $stores->links() }}
-                </div>
+                @if ($isGuest)
+                    @include('partials.guest-gate', [
+                        'title' => 'Masuk untuk melihat lebih jauh',
+                        'message' => 'Masuk atau daftar untuk membuka direktori seluruh toko UMKM, mencari toko favorit, dan melihat katalog mereka.',
+                    ])
+                @else
+                    <div class="mt-4 d-flex justify-content-center">
+                        {{ $stores->links() }}
+                    </div>
+                @endif
             @endif
         </div>
     </section>

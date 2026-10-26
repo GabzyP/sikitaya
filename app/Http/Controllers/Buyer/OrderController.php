@@ -21,7 +21,7 @@ class OrderController extends Controller
         ]);
 
         $orders = Order::forBuyer(auth()->id())
-            ->with(['store', 'items'])
+            ->with(['store', 'items', 'paymentTransaction'])
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->latest()
             ->paginate(8)
@@ -39,7 +39,7 @@ class OrderController extends Controller
     {
         abort_unless($order->user_id === auth()->id(), 403);
 
-        $order->load(['store', 'items.product', 'user']);
+        $order->load(['store', 'items.product', 'user', 'paymentTransaction', 'paymentAllocation']);
 
         return view('orders.show', compact('order'));
     }
@@ -48,7 +48,7 @@ class OrderController extends Controller
     {
         abort_unless($order->user_id === auth()->id(), 403);
         abort_unless($order->status === OrderStatus::Menunggu, 403, 'Bukti bayar tidak dapat diunggah pada status ini.');
-        abort_unless($order->requiresPaymentProof(), 403, 'Metode COD tidak memerlukan bukti bayar.');
+        abort_unless($order->requiresPaymentProof(), 403, 'Metode pembayaran ini tidak memerlukan bukti bayar.');
 
         $request->validate([
             'payment_proof' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],

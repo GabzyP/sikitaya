@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
+use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -14,34 +15,109 @@ use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
-    public function __construct(private readonly ShippingService $shipping) {}
+    public function __construct(
+        private readonly ShippingService $shipping,
+        private readonly MidtransPaymentService $payments,
+    ) {}
 
     /**
-     * Membuat satu pesanan per toko dari isi keranjang pembeli.
+     * Membuat satu pesanan per toko dan satu transaksi online gabungan.
      *
-     * @return Collection<int, Order>
+     * @param  array{mode?: 'cart'|'direct', product_id?: int, quantity?: int, cart_item_ids?: array<int, int>|null}  $selection
+     * @return array{orders: Collection<int, Order>, payment: ?PaymentTransaction}
      */
-    public function checkout(User $buyer, array $data): Collection
+    public function checkout(User $buyer, array $data, string $checkoutToken, array $selection = []): array
     {
-        $cartItems = $buyer->cartItems()->with(['product.store'])->get();
-
-        if ($cartItems->isEmpty()) {
-            throw ValidationException::withMessages(['cart' => 'Keranjang belanja Anda masih kosong.']);
-        }
-
         $destination = $this->shipping->findCity((int) $data['city_id']);
 
         if (! $destination) {
             throw ValidationException::withMessages(['city_id' => 'Kota tujuan tidak ditemukan.']);
         }
 
-        $groups = $cartItems->groupBy(fn ($item) => $item->product->store_id);
         $paymentMethod = PaymentMethod::from($data['payment_method']);
-        $orders = collect();
 
-        DB::transaction(function () use ($buyer, $data, $groups, $destination, $paymentMethod, &$orders) {
+        if ($paymentMethod === PaymentMethod::Midtrans && ! config('midtrans.checkout_enabled', false)) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'Pembayaran Midtrans disimpan tetapi belum diaktifkan untuk checkout.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($buyer, $data, $destination, $paymentMethod, $checkoutToken, $selection) {
+            $existing = PaymentTransaction::where('checkout_token', $checkoutToken)->first();
+
+            if ($existing) {
+                if ($existing->user_id !== $buyer->id) {
+                    throw ValidationException::withMessages(['checkout_token' => 'Token checkout tidak valid.']);
+                }
+
+                return [
+                    'orders' => $existing->orders()->with('store', 'items')->get(),
+                    'payment' => $existing,
+                ];
+            }
+
+            $mode = $selection['mode'] ?? 'cart';
+            $selectedLines = collect();
+
+            if ($mode === 'direct') {
+                $product = Product::with('store')
+                    ->whereKey($selection['product_id'] ?? 0)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $product || ! $product->is_active || ! $product->store?->is_active) {
+                    throw ValidationException::withMessages(['cart' => 'Produk yang dipilih sudah tidak tersedia.']);
+                }
+
+                if ($product->store->user_id === $buyer->id) {
+                    throw ValidationException::withMessages(['cart' => 'Anda tidak dapat membeli produk dari toko Anda sendiri.']);
+                }
+
+                $selectedLines->push([
+                    'product_id' => $product->id,
+                    'quantity' => max(1, (int) ($selection['quantity'] ?? 1)),
+                    'cart_item_id' => null,
+                    'product' => $product,
+                ]);
+            } else {
+                $selectedIds = $selection['cart_item_ids'] ?? null;
+                $cartQuery = $buyer->cartItems()
+                    ->with(['product.store'])
+                    ->lockForUpdate();
+
+                if (is_array($selectedIds)) {
+                    $cartQuery->whereIn('id', $selectedIds);
+                }
+
+                $cartItems = $cartQuery->get();
+
+                if ($cartItems->isEmpty()) {
+                    throw ValidationException::withMessages([
+                        'cart' => $selectedIds === null
+                            ? 'Keranjang belanja Anda masih kosong.'
+                            : 'Tidak ada produk yang dipilih untuk di-checkout.',
+                    ]);
+                }
+
+                if (is_array($selectedIds) && $cartItems->count() !== count($selectedIds)) {
+                    throw ValidationException::withMessages(['cart' => 'Sebagian produk yang dipilih tidak ditemukan di keranjang Anda.']);
+                }
+
+                foreach ($cartItems as $item) {
+                    $selectedLines->push([
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'cart_item_id' => $item->id,
+                        'product' => $item->product,
+                    ]);
+                }
+            }
+
+            $groups = $selectedLines->groupBy(fn ($line) => $line['product']->store_id);
+            $orders = collect();
+
             foreach ($groups as $storeId => $items) {
-                $store = $items->first()->product->store;
+                $store = $items->first()['product']->store;
 
                 if (! $store || ! $store->is_active) {
                     throw ValidationException::withMessages(['cart' => 'Salah satu toko pada keranjang sudah tidak aktif.']);
@@ -59,20 +135,24 @@ class OrderService
                 $weight = 0;
                 $subtotal = 0;
 
-                foreach ($items as $item) {
-                    $product = Product::with('store')->whereKey($item->product_id)->lockForUpdate()->first();
+                foreach ($items as $line) {
+                    $product = Product::with('store')->whereKey($line['product_id'])->lockForUpdate()->first();
 
                     if (! $product || ! $product->is_active || ! $product->store?->is_active) {
-                        throw ValidationException::withMessages(['cart' => 'Produk "'.$item->product->name.'" sudah tidak tersedia.']);
+                        throw ValidationException::withMessages(['cart' => 'Produk "'.$line['product']->name.'" sudah tidak tersedia.']);
                     }
 
-                    if ($product->stock < $item->quantity) {
+                    if ($product->store->user_id === $buyer->id) {
+                        throw ValidationException::withMessages(['cart' => 'Anda tidak dapat membeli produk dari toko Anda sendiri.']);
+                    }
+
+                    if ($product->stock < $line['quantity']) {
                         throw ValidationException::withMessages(['cart' => 'Stok "'.$product->name.'" tersisa '.$product->stock.'.']);
                     }
 
-                    $lockedItems[] = ['product' => $product, 'quantity' => $item->quantity];
-                    $weight += $product->weight * $item->quantity;
-                    $subtotal += $product->price * $item->quantity;
+                    $lockedItems[] = ['product' => $product, 'quantity' => $line['quantity']];
+                    $weight += $product->weight * $line['quantity'];
+                    $subtotal += $product->price * $line['quantity'];
                 }
 
                 $options = $this->shipping->cost($store->city_id, $destination['id'], $weight, $courier);
@@ -124,16 +204,42 @@ class OrderService
                 $orders->push($order->load('store', 'items'));
             }
 
-            $buyer->cartItems()->delete();
-        });
+            $payment = null;
 
-        return $orders;
+            if ($paymentMethod === PaymentMethod::Midtrans) {
+                $payment = $this->payments->createForOrders($buyer, $orders, $checkoutToken);
+            }
+
+            $selectedCartItemIds = $selectedLines
+                ->pluck('cart_item_id')
+                ->filter()
+                ->values();
+
+            if ($selectedCartItemIds->isNotEmpty()) {
+                $buyer->cartItems()->whereIn('id', $selectedCartItemIds)->delete();
+            }
+
+            return [
+                'orders' => $orders,
+                'payment' => $payment,
+            ];
+        });
     }
 
     public function confirmPayment(Order $order): void
     {
         if ($order->status !== OrderStatus::Menunggu) {
             throw ValidationException::withMessages(['status' => 'Pesanan ini tidak berada pada status menunggu.']);
+        }
+
+        if ($order->payment_method === PaymentMethod::Midtrans) {
+            $payment = $order->paymentTransaction;
+
+            if (! $payment?->isPaid()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pembayaran Midtrans belum dikonfirmasi sebagai lunas oleh gateway.',
+                ]);
+            }
         }
 
         if ($order->requiresPaymentProof() && ! $order->payment_proof) {

@@ -55,7 +55,12 @@
                                         <div class="order-number">{{ $order->order_number }}</div>
                                         <div class="order-date">{{ tanggal_indonesia($order->created_at, true) }}</div>
                                     </div>
-                                    <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                                    <div class="d-flex flex-wrap align-items-center gap-1 ms-auto">
+                                        @if ($order->paymentTransaction)
+                                            <span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span>
+                                        @endif
+                                        <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                                    </div>
                                 </div>
 
                                 <div class="order-card-store">
@@ -80,7 +85,12 @@
                                 <div class="order-card-foot">
                                     <span class="order-total">Total pesanan <strong>{{ rupiah($order->total) }}</strong></span>
                                     <div class="actions">
-                                        @if ($order->canBePaidByBuyer())
+                                        @if ($order->payment_method === \App\Enums\PaymentMethod::Midtrans && $order->paymentTransaction)
+                                            <a href="{{ route('payments.show', $order->paymentTransaction) }}" class="btn btn-brand btn-sm">
+                                                <i class="bi bi-credit-card me-1"></i>
+                                                {{ $order->paymentTransaction->isPending() ? 'Lanjutkan pembayaran' : 'Lihat pembayaran' }}
+                                            </a>
+                                        @elseif ($order->canBePaidByBuyer())
                                             <a href="{{ route('orders.show', $order) }}" class="btn btn-brand btn-sm">
                                                 <i class="bi bi-upload me-1"></i> {{ $order->payment_proof ? 'Lihat pembayaran' : 'Bayar sekarang' }}
                                             </a>

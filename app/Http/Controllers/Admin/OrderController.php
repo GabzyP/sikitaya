@@ -21,7 +21,7 @@ class OrderController extends Controller
         ]);
 
         $orders = Order::query()
-            ->with(['store', 'user', 'items'])
+            ->with(['store', 'user', 'items', 'paymentTransaction'])
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['store'] ?? null, fn ($query, $storeId) => $query->where('store_id', $storeId))
             ->when($filters['q'] ?? null, function ($query, $q) {
@@ -46,7 +46,7 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
-        $order->load(['store.owner', 'user', 'items.product']);
+        $order->load(['store.owner', 'user', 'items.product', 'paymentTransaction.allocations', 'paymentAllocation']);
 
         return view('admin.orders.show', compact('order'));
     }

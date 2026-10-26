@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Store;
 use App\Models\User;
 use Illuminate\View\View;
 
@@ -12,28 +9,16 @@ class HomeController extends Controller
 {
     public function __invoke(): View
     {
-        $categories = Category::withCount(['products' => fn ($query) => $query->active()])
-            ->orderBy('name')
-            ->get();
+        $sellerCount = User::where('role', 'seller')->where('is_active', true)->count();
 
-        $products = Product::active()
-            ->with(['store', 'category'])
-            ->latest()
-            ->take(8)
-            ->get();
-
-        $stores = Store::active()
-            ->withCount(['products' => fn ($query) => $query->active()])
-            ->latest()
-            ->take(4)
-            ->get();
-
-        $stats = [
-            'stores' => Store::active()->count(),
-            'products' => Product::active()->count(),
-            'sellers' => User::where('role', 'seller')->where('is_active', true)->count(),
+        $categoryLinks = [
+            ['name' => 'Makanan', 'slug' => 'makanan', 'icon' => 'bi-egg-fried'],
+            ['name' => 'Minuman', 'slug' => 'minuman', 'icon' => 'bi-cup-hot'],
+            ['name' => 'Pakaian', 'slug' => 'pakaian', 'icon' => 'bi-bag'],
+            ['name' => 'Kriya', 'slug' => 'kriya', 'icon' => 'bi-palette'],
+            ['name' => 'Oleh-oleh', 'slug' => 'oleh-oleh', 'icon' => 'bi-gift'],
         ];
 
-        return view('home', compact('categories', 'products', 'stores', 'stats'));
+        return view('home', compact('sellerCount', 'categoryLinks'));
     }
 }

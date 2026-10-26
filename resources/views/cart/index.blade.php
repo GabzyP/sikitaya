@@ -46,6 +46,20 @@
                                     @foreach ($storeItems as $item)
                                         @php($product = $item->product)
                                         <div class="cart-item">
+                                            <label class="cart-select" title="Pilih {{ $product->name }}">
+                                                <input
+                                                    type="checkbox"
+                                                    name="items[]"
+                                                    value="{{ $item->id }}"
+                                                    form="cart-checkout-form"
+                                                    checked
+                                                    data-cart-checkbox
+                                                    data-quantity="{{ $item->quantity }}"
+                                                    data-weight="{{ $product->weight * $item->quantity }}"
+                                                    data-subtotal="{{ $product->price * $item->quantity }}"
+                                                    aria-label="Pilih {{ $product->name }}"
+                                                >
+                                            </label>
                                             <a href="{{ route('products.show', $product) }}" class="cart-thumb">
                                                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
                                             </a>
@@ -94,15 +108,15 @@
                         <h2>Ringkasan belanja</h2>
                         <div class="summary-row">
                             <span>Jumlah item</span>
-                            <strong>{{ number_format($items->sum('quantity'), 0, ',', '.') }} item</strong>
+                            <strong data-cart-summary-count>{{ number_format($items->sum('quantity'), 0, ',', '.') }} item</strong>
                         </div>
                         <div class="summary-row">
                             <span>Total berat</span>
-                            <strong>{{ berat($totalWeight) }}</strong>
+                            <strong data-cart-summary-weight>{{ berat($totalWeight) }}</strong>
                         </div>
                         <div class="summary-row">
                             <span>Subtotal produk</span>
-                            <strong>{{ rupiah($subtotal) }}</strong>
+                            <strong data-cart-summary-subtotal>{{ rupiah($subtotal) }}</strong>
                         </div>
                         <div class="summary-row">
                             <span>Ongkos kirim</span>
@@ -110,7 +124,7 @@
                         </div>
                         <div class="summary-row total">
                             <span>Perkiraan total</span>
-                            <strong>{{ rupiah($subtotal) }}</strong>
+                            <strong data-cart-summary-total>{{ rupiah($subtotal) }}</strong>
                         </div>
 
                         <div class="info-note">
@@ -118,10 +132,17 @@
                             <span>Produk dari toko berbeda akan dibuat menjadi pesanan terpisah, masing-masing dengan ongkir dan pembayaran sendiri.</span>
                         </div>
 
-                        <a href="{{ route('checkout.index') }}" class="btn btn-brand w-100 mt-3">
-                            Lanjut ke checkout <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                        <p class="form-note mb-0 text-center">Anda perlu masuk sebagai pembeli untuk menyelesaikan pesanan.</p>
+                        <form id="cart-checkout-form" action="{{ route('checkout.index') }}" method="GET" class="mt-3">
+                            <input type="hidden" name="cart_selection" value="1">
+                            <button type="submit" class="btn btn-brand w-100" data-cart-checkout>
+                                <span data-cart-checkout-label>Checkout item terpilih</span>
+                                <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                            <div class="text-danger mt-2 d-none" style="font-size:.72rem;" data-cart-selection-error>
+                                Pilih minimal satu produk yang ingin di-checkout.
+                            </div>
+                        </form>
+                        <p class="form-note mb-0 text-center">Centang produk yang ingin dibeli. Produk yang tidak dicentang tetap tersimpan di keranjang.</p>
                     </aside>
                 </div>
             @endif

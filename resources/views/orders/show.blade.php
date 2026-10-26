@@ -38,6 +38,9 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
                     <div class="d-flex align-items-center gap-2">
                         <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                        @if ($order->paymentTransaction)
+                            <span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span>
+                        @endif
                         <span class="text-muted" style="font-size:.72rem;">{{ $order->status->description() }}</span>
                     </div>
                     <span class="order-total">Total <strong>{{ rupiah($order->total) }}</strong></span>
@@ -144,7 +147,11 @@
                                 <h2>Pembayaran</h2>
                                 <p class="payment-sub">{{ $order->payment_method->label() }}</p>
                             </div>
-                            <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                            @if ($order->paymentTransaction)
+                                <span class="{{ $order->paymentTransaction->status->badgeClass() }}">{{ $order->paymentTransaction->status->label() }}</span>
+                            @else
+                                <span class="{{ $order->status->badgeClass() }}">{{ $order->status->label() }}</span>
+                            @endif
                         </div>
 
                         @if ($order->payment_method === \App\Enums\PaymentMethod::Transfer)
@@ -161,9 +168,23 @@
                             <p class="mb-2" style="font-size:.72rem;color:var(--muted);">Transfer sebesar <strong class="text-brand">{{ rupiah($order->total) }}</strong>, lalu unggah bukti transfer di bawah.</p>
                         @elseif ($order->payment_method === \App\Enums\PaymentMethod::Qris)
                             <div class="qris-card">
-                                <img src="{{ asset('images/qris-demo.svg') }}" alt="Kode QRIS simulasi">
-                                <p>QRIS simulasi · nominal {{ rupiah($order->total) }}</p>
+                                <img src="{{ asset('images/qris-demo.jpeg') }}" alt="Kode QRIS demo">
+                                <p>QRIS demo · nominal {{ rupiah($order->total) }}</p>
                             </div>
+                        @elseif ($order->payment_method === \App\Enums\PaymentMethod::Midtrans)
+                            <div class="info-note mb-3">
+                                <i class="bi bi-credit-card-2-front"></i>
+                                <span>
+                                    Pembayaran online diproses oleh Midtrans. Pesanan ini tergabung dalam transaksi
+                                    <strong>{{ $order->paymentTransaction?->reference }}</strong>.
+                                    Status pembayaran: <strong>{{ $order->paymentStatusLabel() }}</strong>.
+                                </span>
+                            </div>
+                            @if ($order->paymentTransaction)
+                                <a href="{{ route('payments.show', $order->paymentTransaction) }}" class="btn btn-brand w-100 mb-2">
+                                    <i class="bi bi-credit-card me-1"></i> Lihat pembayaran gabungan
+                                </a>
+                            @endif
                         @else
                             <div class="info-note mb-3">
                                 <i class="bi bi-cash-coin"></i>
@@ -222,6 +243,8 @@
                                 <span>
                                     @if ($order->requiresPaymentProof())
                                         Menunggu verifikasi pembayaran oleh penjual. Anda akan dapat memantau status pesanan di halaman ini.
+                                    @elseif ($order->payment_method === \App\Enums\PaymentMethod::Midtrans)
+                                        Menunggu konfirmasi pembayaran Midtrans. Gunakan halaman pembayaran gabungan untuk melanjutkan atau membuat percobaan baru.
                                     @else
                                         Menunggu konfirmasi penjual. Pesanan COD akan diproses setelah dikonfirmasi.
                                     @endif
